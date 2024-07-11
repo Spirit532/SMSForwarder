@@ -1,12 +1,13 @@
 package com.spirit.smsforwarder.ui.dashboard
 
+import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
+//import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -51,9 +52,15 @@ class DashboardFragment : Fragment() {
 		return root
 	}
 
+	@SuppressLint("UnspecifiedRegisterReceiverFlag")
 	override fun onResume() {
 		super.onResume()
-		context?.registerReceiver(messageReceiver, IntentFilter("com.spirit.smsforwarder.NEW_MESSAGE"))
+		val intentFilter = IntentFilter("com.spirit.smsforwarder.NEW_MESSAGE")
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+			context?.registerReceiver(messageReceiver, intentFilter, Context.RECEIVER_NOT_EXPORTED)
+		} else {
+			context?.registerReceiver(messageReceiver, intentFilter)
+		}
 		displayMessages()
 	}
 
