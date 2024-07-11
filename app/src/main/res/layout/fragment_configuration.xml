@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+		xmlns:android="http://schemas.android.com/apk/res/android"
+		xmlns:app="http://schemas.android.com/apk/res-auto"
+		xmlns:tools="http://schemas.android.com/tools"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		tools:context=".ui.notifications.ConfigurationFragment">
+
+	<EditText
+			android:id="@+id/telegramTokenInput"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:inputType="textPassword"
+			android:ems="10"
+			app:layout_constraintEnd_toEndOf="parent"
+			android:layout_marginEnd="8dp"
+			app:layout_constraintTop_toTopOf="parent"
+			android:layout_marginTop="8dp"/>
+
+	<TextView
+			android:id="@+id/textView"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/tg_token_text"
+			app:layout_constraintEnd_toStartOf="@+id/telegramTokenInput"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toTopOf="@+id/telegramTokenInput"
+			app:layout_constraintBottom_toBottomOf="@+id/telegramTokenInput"
+			android:textAppearance="@style/TextAppearance.AppCompat.Body1"/>
+
+	<TextView
+			android:id="@+id/userIdTextView"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/tg_user_id_text"
+			app:layout_constraintEnd_toStartOf="@+id/whoToMessageID"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toTopOf="@+id/whoToMessageID"
+			app:layout_constraintBottom_toBottomOf="@+id/whoToMessageID"
+			android:textAppearance="@style/TextAppearance.AppCompat.Body1"/>
+
+	<EditText
+			android:id="@+id/whoToMessageID"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:inputType="number"
+			android:ems="10"
+			app:layout_constraintEnd_toEndOf="parent"
+			android:layout_marginEnd="8dp"
+			app:layout_constraintTop_toBottomOf="@+id/telegramTokenInput"
+			android:layout_marginTop="8dp"/>
+
+	<TextView
+			android:id="@+id/appIgnoreListText"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/ignore_application_text"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintEnd_toEndOf="parent"
+			android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+			app:layout_constraintTop_toBottomOf="@+id/whoToMessageID"
+			android:layout_marginTop="32dp"/>
+
+	<ScrollView
+			android:id="@+id/appIgnoreScrollView"
+			android:layout_width="0dp"
+			android:layout_height="0dp"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintBottom_toBottomOf="parent"
+			android:layout_margin="8dp"
+			app:layout_constraintTop_toBottomOf="@+id/searchView">
+
+		<LinearLayout
+				android:id="@+id/appListContainer"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:orientation="vertical">
+		</LinearLayout>
+	</ScrollView>
+
+	<ProgressBar
+			android:id="@+id/loadingIndicator"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_gravity="center"
+			app:layout_constraintEnd_toEndOf="@+id/appIgnoreScrollView"
+			app:layout_constraintStart_toStartOf="@+id/appIgnoreScrollView"
+			app:layout_constraintBottom_toBottomOf="@+id/appIgnoreScrollView"
+			app:layout_constraintTop_toTopOf="@+id/appIgnoreScrollView"/>
+
+	<SearchView
+			android:layout_width="0dp"
+			android:layout_height="30dp"
+			app:layout_constraintTop_toBottomOf="@+id/appIgnoreListText"
+			app:layout_constraintStart_toStartOf="parent"
+			android:id="@+id/searchView"
+			app:layout_constraintEnd_toStartOf="@+id/sortSpinner"
+			android:layout_marginStart="8dp"
+			app:layout_constraintHorizontal_bias="1.0"
+			app:layout_constraintHorizontal_weight="1"/>
+
+	<Spinner
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:id="@+id/sortSpinner"
+			app:layout_constraintEnd_toEndOf="parent"
+			android:layout_marginEnd="8dp"
+			app:layout_constraintTop_toBottomOf="@+id/appIgnoreListText"
+			app:layout_constraintBottom_toBottomOf="@+id/searchView"/>
+
+	<View
+			android:id="@+id/divider"
+			android:layout_width="0dp"
+			android:layout_height="1dp"
+			android:background="?android:attr/listDivider"
+			app:layout_constraintBottom_toTopOf="@+id/appIgnoreListText"
+			app:layout_constraintStart_toStartOf="parent"
+			android:layout_marginStart="8dp"
+			app:layout_constraintEnd_toEndOf="parent"
+			android:layout_marginEnd="8dp"
+			android:layout_marginBottom="8dp"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

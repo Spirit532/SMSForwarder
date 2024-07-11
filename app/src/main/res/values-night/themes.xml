@@ -1,0 +1,16 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Theme.SMSForwarder" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">#FFF57C00</item>
+        <item name="colorPrimaryVariant">#FFFF9800</item>
+        <item name="colorOnPrimary">#FFFFE0B2</item>
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">#FFFF9800</item>
+        <item name="colorSecondaryVariant">#FFFFC107</item>
+        <item name="colorOnSecondary">#FF757575</item>
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <!-- Customize your theme here. -->
+    </style>
+</resources>

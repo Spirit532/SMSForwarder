@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="vertical"
+              android:padding="4dp"
+              android:background="@drawable/rounded_background"
+              android:layout_margin="2dp">
+
+	<LinearLayout
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content">
+
+		<TextView
+				android:id="@+id/messageSender"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:text="Sender"
+				android:textAppearance="@style/TextAppearance.AppCompat.Body2"/>
+
+		<Space
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_weight="1"/>
+
+		<TextView
+				android:id="@+id/messageTimestamp"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:text="Timestamp"
+				android:textAppearance="@style/TextAppearance.AppCompat.Body2"/>
+	</LinearLayout>
+
+	<TextView
+			android:id="@+id/messageContent"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="Message Content"/>
+
+</LinearLayout>
