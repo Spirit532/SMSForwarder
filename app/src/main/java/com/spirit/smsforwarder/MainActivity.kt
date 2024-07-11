@@ -29,7 +29,8 @@ class MainActivity : AppCompatActivity() {
 		android.Manifest.permission.READ_SMS,
 		android.Manifest.permission.POST_NOTIFICATIONS,
 		android.Manifest.permission.INTERNET,
-		android.Manifest.permission.QUERY_ALL_PACKAGES
+		android.Manifest.permission.QUERY_ALL_PACKAGES,
+		android.Manifest.permission.FOREGROUND_SERVICE_SPECIAL_USE
 	)
 
 	override fun onCreate(savedInstanceState: Bundle?) {

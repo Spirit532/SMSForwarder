@@ -128,7 +128,7 @@ class AllNotificationService : Service() {
 		val channel = NotificationChannel(
 			"SMSForwarderNotificationChannel",
 			"SMSForwarder Service",
-			NotificationManager.IMPORTANCE_MAX
+			NotificationManager.IMPORTANCE_HIGH
 		)
 		val manager = getSystemService(NotificationManager::class.java)
 		manager.createNotificationChannel(channel)
