@@ -14,15 +14,16 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '17'
-          distribution: 'temurin'
           cache: gradle
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
-      - name: Build Release APK
-        run: ./gradlew assembleRelease
-      - name: Releasing using Hub
-        uses: sangatdesai/release-apk@main
-        env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
-          APP_FOLDER: app
+      - name: Make Gradle executable
+        run: chmod +x ./gradlew
+          - name: Build Release APK
+            run: ./gradlew assembleRelease
+          - name: Releasing using Hub
+            uses: kyze8439690/action-release-releaseapk@master
+            env:
+              GITHUB_TOKEN: ${{ secrets.TOKEN }}
+              APP_FOLDER: app
