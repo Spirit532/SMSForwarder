@@ -22,7 +22,7 @@ Notification dashboard             |  Configuration page | Received messages
 :-------------------------:|:-------------------------:|:-------------------------:
 ![](./media/screenshot1.png)  |  ![](./media/screenshot2.png) |  ![](./media/screenshot3.png)
 
-![](./media/demo.mp4)
+[![](./media/demo.mp4)](https://github.com/Spirit532/SMSForwarder/blob/main/media/demo.mp4)
 
 # How do I use it?
 1. Buy a cheap smartphone with dual standby to stick your extra SIMs in.
