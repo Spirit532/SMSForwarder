@@ -33,6 +33,16 @@ android {
     buildFeatures {
         viewBinding = true
     }
+    lint {
+        abortOnError = true
+        warningsAsErrors = false
+        checkAllWarnings = true
+        //lintConfig file("lint.xml") // Optional: if you have a custom lint configuration
+        textReport = true
+        //textOutput = "stdout"
+        htmlReport = false
+        xmlReport = false
+    }
 }
 
 dependencies {

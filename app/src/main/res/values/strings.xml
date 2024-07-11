@@ -7,11 +7,8 @@
     <string name="tg_user_id_text">Target user ID</string>
 
     <string name="ignore_application_text">Applications to ignore notifications from</string>
-    <string name="add_ignore_application_btn">Add</string>
     <string name="enabled_first_search">Ignored first</string>
     <string name="alphabetical_search">A-Z</string>
     <string name="alphabetical_reverse">Z-A</string>
 
-    <string name="notification_channel_id">SMSForwarder_channel_id</string>
-    <string name="notification_channel_name">SMSForwarder</string>
 </resources>

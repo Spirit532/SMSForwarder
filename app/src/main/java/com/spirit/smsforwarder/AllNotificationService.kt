@@ -120,6 +120,7 @@ class AllNotificationService : Service() {
 
 	private fun broadcastMessage(message: MessageItem) {
 		val intent = Intent("com.spirit.smsforwarder.NEW_MESSAGE")
+		intent.setPackage(packageName)
 		intent.putExtra("messageItem", message)
 		sendBroadcast(intent)
 	}
