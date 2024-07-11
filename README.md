@@ -18,11 +18,11 @@ It uses Android's default notification listener functionality to grab all system
 When either is received, it's put into a queue, which a foreground service then attempts to send via a POST request to Telegram, with your own bot token and your own user ID.\
 If it fails, it keeps it in the queue and repeats transmission attempts ad infinitum, to ensure that you don't miss anything important(like a 3D-secure bank token).
 
-Notification dashboard             |  Configuration page | Received messages
-:-------------------------:|:-------------------------:|:-------------------------:
-![](./media/screenshot1.png)  |  ![](./media/screenshot2.png) |  ![](./media/screenshot3.png)
+|    Notification dashboard    |      Configuration page      |      Received messages       |
+|:----------------------------:|:----------------------------:|:----------------------------:|
+| ![](./media/screenshot1.png) | ![](./media/screenshot2.png) | ![](./media/screenshot3.png) |
 
-
+https://github.com/Spirit532/SMSForwarder/assets/13601407/e57fed8f-af6b-4bd7-bcb4-d82905b44ddd
 
 # How do I use it?
 1. Buy a cheap smartphone with dual standby to stick your extra SIMs in.
@@ -35,8 +35,6 @@ Notification dashboard             |  Configuration page | Received messages
 8. Take the bot token, put it in the ``Telegram bot token`` box in the app.
 9. Use any third-party user info bot to find out your user ID. Put it in the ``Target user ID`` box.
 10. Configure apps you don't want to receive notifications for. If the box is checked, the app is ignored.
-
-https://github.com/Spirit532/SMSForwarder/assets/13601407/e57fed8f-af6b-4bd7-bcb4-d82905b44ddd
 
 # Is it safe?
 
