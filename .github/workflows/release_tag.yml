@@ -24,7 +24,12 @@ jobs:
       - name: Build and release APK
         run: ./gradlew assembleRelease
       - name: Releasing using Hub
-        uses: kyze8439690/action-release-releaseapk@master
+        uses: VladDaniliuk/action-release-releaseapk@master
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
-          APP_FOLDER: app
+          VERSION_VARIABLE: versionName
+          APP_FILE: buildSrc/Android.kt
+          APP_FOLDER: ./app/release/app.apk
+          CHANGELOG_FILE: ./CHANGELOG.md
+          RELEASE_TITLE: Automatic release
+          NAME_VARIABLE: app-release.apk
