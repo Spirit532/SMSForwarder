@@ -25,14 +25,20 @@ jobs:
       - name: Build Release APK
         run: ./gradlew assembleRelease
 
+      - name: Set current date as env variable
+        run: echo "NOW_LONG=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
+
+      - name: Set release hash as env variable
+        run: echo "SHA_SHORT=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         with:
-          tag_name: AutoRelease$(date +'%Y-%m-%dT%H_%M_%S')
-          release_name: Automatic release $(date +'%Y-%m-%dT%H:%M:%S')
+          tag_name: AutoRelease$SHA_SHORT
+          release_name: Automatic release $NOW_LONG
           draft: false
           prerelease: false
 
