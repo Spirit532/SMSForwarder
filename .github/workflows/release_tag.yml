@@ -23,9 +23,8 @@ jobs:
         run: chmod +x ./gradlew
       - name: Build and release APK
         run: ./gradlew assembleRelease
-      - name: Releasing using Hub
-        uses: ShaunLWM/action-release-debugapk@master
+      - name: Publish APK
+        uses: alsrb968/action-release-apk@master
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
           APP_FOLDER: app
-          RELEASE_TITLE: New release
