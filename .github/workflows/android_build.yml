@@ -31,8 +31,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         with:
-          tag_name: newtag
-          release_name: Automatic release
+          tag_name: AutoRelease$(date +'%Y-%m-%dT%H_%M_%S')
+          release_name: Automatic release $(date +'%Y-%m-%dT%H:%M:%S')
           draft: false
           prerelease: false
 
