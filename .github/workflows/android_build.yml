@@ -37,8 +37,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         with:
-          tag_name: AutoRelease$SHA_SHORT
-          release_name: Automatic release $NOW_LONG
+          tag_name: AutoRelease${{env.$SHA_SHORT}}
+          release_name: Automatic release ${{ env.NOW_LONG }}
           draft: false
           prerelease: false
 
