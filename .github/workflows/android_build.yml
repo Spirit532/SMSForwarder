@@ -32,7 +32,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         with:
           tag_name: newtag
-          release_name: Automatic Release
+          release_name: Automatic release
           draft: false
           prerelease: false
 
