@@ -10,7 +10,7 @@ import com.spirit.smsforwarder.model.QueueSingleton
 class NotificationListener : NotificationListenerService() {
 
 	override fun onNotificationPosted(sbn: StatusBarNotification) {
-		val excludedPackages = setOf("com.google.android.apps.messaging", "com.spirit.smsforwarder", "com.xiaomi.discover") // avoids sms, own notifications, and other useless crud
+		val excludedPackages = setOf("com.google.android.apps.messaging", "com.android.messaging", "com.spirit.smsforwarder", "com.xiaomi.discover") // avoids sms, own notifications, and other useless crud
 		val packageName = sbn.packageName
 		if (!excludedPackages.contains(packageName) && !getSharedPreferences("smsforwarder_prefs", 0).getBoolean("${packageName}_ignore_enabled", false)) {
 			//Log.d("NotificationListener", "${packageName}_ignore_enabled = ${getSharedPreferences("smsforwarder_prefs", 0).getBoolean("${packageName}_ignore_enabled", false)}")
@@ -40,13 +40,19 @@ class NotificationListener : NotificationListenerService() {
 				timestamp = sbn.postTime
 			)
 
+			// Check if the message with the same timestamp already exists
 			if (!QueueSingleton.containsMessage(msg))
 				QueueSingleton.messageQueue.add(msg)
 
-			//Log.d("NotificationListener", message)
 		}
 	}
 
+	override fun onNotificationRemoved(sbn: StatusBarNotification) {
+		// Android 14 shenanigans
+		if(sbn.packageName == "com.spirit.smsforwarder")
+			QueueSingleton.notificationDismissed = true
+		//Log.d("NotificationListener", "Notification dismissed: ${sbn.notification.extras.getString("android.text")}")
+	}
 
 	private fun getAppName(packageName: String): String {
 		return try {

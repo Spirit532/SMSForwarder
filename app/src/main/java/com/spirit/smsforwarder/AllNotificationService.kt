@@ -42,6 +42,13 @@ class AllNotificationService : Service() {
 					broadcastMessage(message)
 				}
 			}
+
+			if(QueueSingleton.notificationDismissed)
+			{
+				QueueSingleton.notificationDismissed = false
+				startForeground(1, createNotification())
+			}
+
 			handler.postDelayed(this, 1000)
 		}
 	}
@@ -75,14 +82,16 @@ class AllNotificationService : Service() {
 		val telegramToken = sharedPreferences.getString("telegram_token", null)
 		val telegramUserId = sharedPreferences.getString("telegram_user_id", null)
 
-		if (telegramToken.isNullOrEmpty() || telegramUserId.isNullOrEmpty()) {
+		if (telegramToken.isNullOrEmpty() || telegramUserId.isNullOrEmpty() || !telegramToken.contains(':')) {
 			return false
 		}
 
 		val urlString = "https://api.telegram.org/bot$telegramToken/sendMessage"
 		val messageText = "<b>${message.sender} ${
 			DateTimeFormatter.ofPattern("dd/MM/yy HH:mm:ss").withZone(ZoneId.systemDefault()).format(
-				Instant.ofEpochMilli(message.timestamp))}</b>\n<blockquote>${message.content}</blockquote>"
+				Instant.ofEpochMilli(message.timestamp)
+			)
+		}</b>\n<blockquote>${message.content}</blockquote>"
 		val params = "chat_id=$telegramUserId&parse_mode=HTML&text=${URLEncoder.encode(messageText, "UTF-8")}"
 
 		return try {
@@ -130,16 +139,22 @@ class AllNotificationService : Service() {
 			"SMSForwarderNotificationChannel",
 			"SMSForwarder Service",
 			NotificationManager.IMPORTANCE_HIGH
-		)
+		).apply {
+			description = "Channel for SMS Forwarder service notifications"
+			setShowBadge(false)
+			lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+		}
+
 		val manager = getSystemService(NotificationManager::class.java)
-		manager.createNotificationChannel(channel)
+		manager?.createNotificationChannel(channel)
 	}
 
-	private fun createNotification(): Notification {
-		val intent = Intent(this, MainActivity::class.java)
-		intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-		val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
-
+	fun createNotification(): Notification {
+		val intent = Intent(this, MainActivity::class.java).apply {
+			flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+		}
+		val pendingIntent = PendingIntent.getActivity(
+			this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 		return NotificationCompat.Builder(this, "SMSForwarderNotificationChannel")
 			.setContentTitle("Listening for notifications")
 			.setContentText("The SMSForwarder service is running")
