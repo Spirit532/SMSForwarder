@@ -21,8 +21,9 @@ class ConfigurationFragment : Fragment() {
 	private val binding get() = _binding!!
 	private lateinit var configurationViewModel: ConfigurationViewModel
 	private val coroutineScope = CoroutineScope(Dispatchers.Main + Job())
-	private var installedApps: List<PackageInfo> = emptyList()
-	private var filteredApps: List<PackageInfo> = emptyList()
+	private var installedApps: List<AppItem> = emptyList()
+	private var filteredApps: List<AppItem> = emptyList()
+	private lateinit var appAdapter: AppListAdapter
 
 	override fun onCreateView(
 		inflater: LayoutInflater,
@@ -31,6 +32,12 @@ class ConfigurationFragment : Fragment() {
 	): View {
 		configurationViewModel = ViewModelProvider(this).get(ConfigurationViewModel::class.java)
 		_binding = FragmentConfigurationBinding.inflate(inflater, container, false)
+
+		appAdapter = AppListAdapter(emptyList()) { packageName, isChecked ->
+			configurationViewModel.setAppEnabled(packageName, isChecked)
+		}
+		binding.appListContainer.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(requireContext())
+		binding.appListContainer.adapter = appAdapter
 
 		observeViewModel()
 		loadApps()
@@ -74,9 +81,22 @@ class ConfigurationFragment : Fragment() {
 	private fun loadApps() {
 		showLoading(true)
 		coroutineScope.launch {
-			withContext(Dispatchers.IO) {
-				installedApps = requireContext().packageManager.getInstalledPackages(PackageManager.GET_META_DATA)
+			val pm = requireContext().packageManager
+			val newInstalledApps = withContext(Dispatchers.IO) {
+				pm.getInstalledPackages(PackageManager.GET_META_DATA).mapNotNull { packageInfo ->
+					val appInfo = packageInfo.applicationInfo
+					if (appInfo != null) {
+						AppItem(
+							appName = appInfo.loadLabel(pm).toString(),
+							packageName = appInfo.packageName,
+							isEnabled = configurationViewModel.getAppEnabled(appInfo.packageName)
+						)
+					} else {
+						null
+					}
+				}
 			}
+			installedApps = newInstalledApps
 			filteredApps = installedApps
 			withContext(Dispatchers.Main) {
 				populateAppList(filteredApps)
@@ -86,26 +106,8 @@ class ConfigurationFragment : Fragment() {
 		}
 	}
 
-	private fun populateAppList(apps: List<PackageInfo>) {
-		binding.appListContainer.apply {
-			removeAllViews()
-			val packageManager = requireContext().packageManager
-			val inflater = LayoutInflater.from(requireContext())
-			apps.forEach { packageInfo ->
-				val appInfo = packageInfo.applicationInfo
-				val view = inflater.inflate(R.layout.item_app, this, false)
-				val appName = view.findViewById<TextView>(R.id.appName)
-				val appPackageName = view.findViewById<TextView>(R.id.appPackageName)
-				val appCheckbox = view.findViewById<CheckBox>(R.id.appCheckbox)
-				appName.text = appInfo.loadLabel(packageManager)
-				appPackageName.text = appInfo.packageName
-				appCheckbox.isChecked = configurationViewModel.getAppEnabled(appInfo.packageName)
-				appCheckbox.setOnCheckedChangeListener { _, isChecked ->
-					configurationViewModel.setAppEnabled(appInfo.packageName, isChecked)
-				}
-				addView(view)
-			}
-		}
+	private fun populateAppList(apps: List<AppItem>) {
+		appAdapter.updateData(apps)
 	}
 
 	private fun showLoading(isLoading: Boolean) {
@@ -117,8 +119,8 @@ class ConfigurationFragment : Fragment() {
 			showLoading(true)
 			val lowerCaseQuery = query?.lowercase() ?: ""
 			filteredApps = withContext(Dispatchers.Default) {
-				installedApps.filter { packageInfo ->
-					packageInfo.applicationInfo.loadLabel(requireContext().packageManager).toString().lowercase().contains(lowerCaseQuery)
+				installedApps.filter { appItem ->
+					appItem.appName.lowercase().contains(lowerCaseQuery)
 				}
 			}
 			sortAppListAsync()
@@ -129,9 +131,9 @@ class ConfigurationFragment : Fragment() {
 		coroutineScope.launch {
 			filteredApps = withContext(Dispatchers.Default) {
 				when (binding.sortSpinner.selectedItem.toString()) {
-					getString(R.string.enabled_first_search) -> filteredApps.sortedByDescending { configurationViewModel.getAppEnabled(it.packageName) }
-					getString(R.string.alphabetical_search) -> filteredApps.sortedBy { it.applicationInfo.loadLabel(requireContext().packageManager).toString() }
-					getString(R.string.alphabetical_reverse) -> filteredApps.sortedByDescending { it.applicationInfo.loadLabel(requireContext().packageManager).toString() }
+					getString(R.string.enabled_first_search) -> filteredApps.sortedByDescending { it.isEnabled }
+					getString(R.string.alphabetical_search) -> filteredApps.sortedBy { it.appName }
+					getString(R.string.alphabetical_reverse) -> filteredApps.sortedByDescending { it.appName }
 					else -> filteredApps
 				}
 			}
@@ -153,4 +155,46 @@ class SimpleTextWatcher(private val onTextChanged: (String) -> Unit) : TextWatch
 	}
 	override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 	override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+}
+
+data class AppItem(
+	val appName: String,
+	val packageName: String,
+	var isEnabled: Boolean
+)
+
+class AppListAdapter(
+	private var apps: List<AppItem>,
+	private val onToggleEnabled: (String, Boolean) -> Unit
+) : androidx.recyclerview.widget.RecyclerView.Adapter<AppListAdapter.ViewHolder>() {
+
+	class ViewHolder(view: View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(view) {
+		val appName: TextView = view.findViewById(R.id.appName)
+		val appPackageName: TextView = view.findViewById(R.id.appPackageName)
+		val appCheckbox: CheckBox = view.findViewById(R.id.appCheckbox)
+	}
+
+	override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+		val view = LayoutInflater.from(parent.context).inflate(R.layout.item_app, parent, false)
+		return ViewHolder(view)
+	}
+
+	override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+		val item = apps[position]
+		holder.appName.text = item.appName
+		holder.appPackageName.text = item.packageName
+		holder.appCheckbox.setOnCheckedChangeListener(null)
+		holder.appCheckbox.isChecked = item.isEnabled
+		holder.appCheckbox.setOnCheckedChangeListener { _, isChecked ->
+			item.isEnabled = isChecked
+			onToggleEnabled(item.packageName, isChecked)
+		}
+	}
+
+	override fun getItemCount() = apps.size
+
+	fun updateData(newApps: List<AppItem>) {
+		apps = newApps
+		notifyDataSetChanged()
+	}
 }
