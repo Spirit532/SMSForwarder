@@ -9,8 +9,18 @@ import com.spirit.smsforwarder.model.QueueSingleton
 
 class NotificationListener : NotificationListenerService() {
 
+	override fun onListenerConnected() {
+		super.onListenerConnected()
+		QueueSingleton.isListenerConnected = true
+	}
+
+	override fun onListenerDisconnected() {
+		super.onListenerDisconnected()
+		QueueSingleton.isListenerConnected = false
+	}
+
 	override fun onNotificationPosted(sbn: StatusBarNotification) {
-		val excludedPackages = setOf("com.google.android.apps.messaging", "com.android.messaging", "com.spirit.smsforwarder", "com.xiaomi.discover") // avoids sms, own notifications, and other useless crud
+		val excludedPackages = setOf("com.google.android.apps.messaging", "com.android.messaging", "com.spirit.smsforwarder", "com.xiaomi.discover", "android", "com.android.systemui", "com.google.android.gms", "com.android.vending") // avoids sms, own notifications, system processes and other useless crud
 		val packageName = sbn.packageName
 		if (!excludedPackages.contains(packageName) && !getSharedPreferences("smsforwarder_prefs", 0).getBoolean("${packageName}_ignore_enabled", false)) {
 			//Log.d("NotificationListener", "${packageName}_ignore_enabled = ${getSharedPreferences("smsforwarder_prefs", 0).getBoolean("${packageName}_ignore_enabled", false)}")

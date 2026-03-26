@@ -25,24 +25,9 @@ class MainActivity : AppCompatActivity() {
 	private val PERMISSIONS_REQUEST_CODE = 1
 
 	private val permissions = mutableListOf<String>().apply {
-		add(android.Manifest.permission.INTERNET)
 		add(android.Manifest.permission.RECEIVE_SMS)
 		add(android.Manifest.permission.READ_SMS)
 		// Add permissions conditionally based on API levels
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-			add(android.Manifest.permission.READ_EXTERNAL_STORAGE)
-			add(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
-		}
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-			add(android.Manifest.permission.FOREGROUND_SERVICE)
-		}
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-			add(android.Manifest.permission.QUERY_ALL_PACKAGES)
-		}
-		// Foreground service special use is only available on Android 14 and later
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-			add(android.Manifest.permission.FOREGROUND_SERVICE_SPECIAL_USE)
-		}
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
 			add(android.Manifest.permission.POST_NOTIFICATIONS)
 		}
@@ -61,6 +46,8 @@ class MainActivity : AppCompatActivity() {
 			Toast.makeText(this,
 				"Please enable notification access for this app. It must be done manually.",
 				Toast.LENGTH_LONG).show()
+		} else {
+			requestBatteryOptimizationIfRequired()
 		}
 
 		requestPermissions()
@@ -105,9 +92,10 @@ class MainActivity : AppCompatActivity() {
 	}
 
 	private fun showRationaleDialog(permissionsToRequest: Array<String>) {
+		val missingList = permissionsToRequest.joinToString("\n") { "- " + it.substringAfterLast('.') }
 		AlertDialog.Builder(this)
 			.setTitle("Permissions Required")
-			.setMessage("This app needs the following permissions to function properly: ${permissionsToRequest.joinToString(", ")}")
+			.setMessage("This app needs the following permissions to function properly:\n$missingList")
 			.setPositiveButton("OK") { _, _ ->
 				// Request permissions after showing rationale
 				ActivityCompat.requestPermissions(this, permissionsToRequest, PERMISSIONS_REQUEST_CODE)
@@ -130,7 +118,19 @@ class MainActivity : AppCompatActivity() {
 				}
 			}
 			if (permissionsToRequest.isNotEmpty()) {
-				Toast.makeText(this, "Some permissions were not granted. This may affect operation.", Toast.LENGTH_LONG).show()
+				val missingList = permissionsToRequest.joinToString("\n") { "- " + it.substringAfterLast('.') }
+				AlertDialog.Builder(this)
+					.setTitle("Permissions Required")
+					.setMessage("These permissions were permanently denied:\n$missingList\n\nPlease go to App Settings and manually enable them so the app can function correctly.")
+					.setPositiveButton("Open Settings") { _, _ ->
+						val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+							data = android.net.Uri.fromParts("package", packageName, null)
+						}
+						startActivity(intent)
+					}
+					.setNegativeButton("Cancel") { dialog, _ -> dialog.dismiss() }
+					.create()
+					.show()
 			}
 		}
 	}
@@ -144,5 +144,25 @@ class MainActivity : AppCompatActivity() {
 		val colonSplitter = TextUtils.SimpleStringSplitter(':').apply { setString(enabledListeners) }
 		val componentName = ComponentName(this, NotificationListener::class.java)
 		return colonSplitter.any { it == componentName.flattenToString() }
+	}
+
+	private fun requestBatteryOptimizationIfRequired() {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+			val pm = getSystemService(android.content.Context.POWER_SERVICE) as android.os.PowerManager
+			if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+				AlertDialog.Builder(this)
+					.setTitle("Battery Optimization")
+					.setMessage("To ensure the app intercepts all notifications and stays alive in the background, please disable battery optimization when prompted.")
+					.setPositiveButton("OK") { _, _ ->
+						val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+							data = android.net.Uri.parse("package:$packageName")
+						}
+						startActivity(intent)
+					}
+					.setNegativeButton("Cancel", null)
+					.create()
+					.show()
+			}
+		}
 	}
 }

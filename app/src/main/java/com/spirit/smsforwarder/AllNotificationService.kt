@@ -26,20 +26,57 @@ class AllNotificationService : Service() {
 
 	private val smsReceiver = SmsReceiver()
 	private val handler = Handler(Looper.getMainLooper())
+	@Volatile
+	private var isProcessingMessage = false
+
+	private var lastHealthCheckTime = System.currentTimeMillis()
+
 	private val processRunnable = object : Runnable {
 		override fun run() {
+			val now = System.currentTimeMillis()
+
+			checkNotificationServiceHealth()
+
+			if (now < QueueSingleton.pauseSendingUntil) {
+				handler.postDelayed(this, 1000)
+				return
+			}
+
+			val fourteenDays = 14L * 24 * 60 * 60 * 1000
+			while (true) {
+				val peekMsg = QueueSingleton.messageQueue.peek()
+				if (peekMsg != null && (now - peekMsg.timestamp) > fourteenDays) {
+					QueueSingleton.messageQueue.poll()
+				} else {
+					break
+				}
+			}
+
 			val message = QueueSingleton.messageQueue.peek()
 			if (message != null) {
-				executorService.execute {
-					val isSent = sendMessage(message)
-					if (isSent) {
-						message.isSent = true
-						QueueSingleton.messageHistory.add(message)
-						QueueSingleton.messageQueue.poll()
-					} else {
-						message.isError = true
+				if (!isProcessingMessage) {
+					isProcessingMessage = true
+					executorService.execute {
+						try {
+							val responseCode = sendMessage(message)
+							if (responseCode == 200) {
+								message.isSent = true
+								QueueSingleton.addToHistory(message)
+								QueueSingleton.messageQueue.poll()
+							} else {
+								message.isError = true
+								if (responseCode == 429) {
+									QueueSingleton.pauseSendingUntil = System.currentTimeMillis() + 3600_000L
+									showRateLimitNotification()
+								} else {
+									QueueSingleton.pauseSendingUntil = System.currentTimeMillis() + 10_000L
+								}
+							}
+							broadcastMessage(message)
+						} finally {
+							isProcessingMessage = false
+						}
 					}
-					broadcastMessage(message)
 				}
 			}
 
@@ -77,13 +114,13 @@ class AllNotificationService : Service() {
 		return null
 	}
 
-	private fun sendMessage(message: MessageItem): Boolean {
+	private fun sendMessage(message: MessageItem): Int {
 		val sharedPreferences = getSharedPreferences("smsforwarder_prefs", MODE_PRIVATE)
 		val telegramToken = sharedPreferences.getString("telegram_token", null)
 		val telegramUserId = sharedPreferences.getString("telegram_user_id", null)
 
 		if (telegramToken.isNullOrEmpty() || telegramUserId.isNullOrEmpty() || !telegramToken.contains(':')) {
-			return false
+			return -1
 		}
 
 		val urlString = "https://api.telegram.org/bot$telegramToken/sendMessage"
@@ -99,6 +136,8 @@ class AllNotificationService : Service() {
 			val connection = url.openConnection() as HttpURLConnection
 			connection.requestMethod = "POST"
 			connection.doOutput = true
+			connection.connectTimeout = 15000
+			connection.readTimeout = 15000
 			connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
 
 			val outputStream: OutputStream = connection.outputStream
@@ -120,10 +159,10 @@ class AllNotificationService : Service() {
 
 			connection.disconnect()
 
-			responseCode == 200
+			responseCode
 		} catch (e: Exception) {
 			e.printStackTrace()
-			false
+			-1
 		}
 	}
 
@@ -160,6 +199,71 @@ class AllNotificationService : Service() {
 			.setContentText("The SMSForwarder service is running")
 			.setSmallIcon(R.drawable.small_icon)
 			.setContentIntent(pendingIntent)  // Set the content intent
+			.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+			.setPriority(NotificationCompat.PRIORITY_LOW)
 			.build()
+	}
+
+	private fun showRateLimitNotification() {
+		val channelId = "SMSForwarderRateLimitChannel"
+		val manager = getSystemService(NotificationManager::class.java)
+
+		val channel = NotificationChannel(
+			channelId,
+			"Rate Limit Alerts",
+			NotificationManager.IMPORTANCE_HIGH
+		).apply {
+			description = "Alerts for API rate limits"
+			lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+		}
+		manager?.createNotificationChannel(channel)
+
+		val notification = NotificationCompat.Builder(this, channelId)
+			.setContentTitle("Telegram Rate Limit Hit!")
+			.setContentText("Sending paused for 1 hour.")
+			.setSmallIcon(R.drawable.small_icon)
+			.setPriority(NotificationCompat.PRIORITY_HIGH)
+			.setCategory(NotificationCompat.CATEGORY_ALARM)
+			.setDefaults(NotificationCompat.DEFAULT_SOUND or NotificationCompat.DEFAULT_VIBRATE)
+			.build()
+
+		manager?.notify(2, notification)
+	}
+
+	private fun checkNotificationServiceHealth() {
+		val now = System.currentTimeMillis()
+		if (now - lastHealthCheckTime < 60_000L) {
+			return
+		}
+		lastHealthCheckTime = now
+
+		val enabledListeners = android.provider.Settings.Secure.getString(contentResolver, "enabled_notification_listeners")
+		val isEnabledInSettings = enabledListeners?.let {
+			val colonSplitter = android.text.TextUtils.SimpleStringSplitter(':').apply { setString(it) }
+			val componentName = android.content.ComponentName(this, NotificationListener::class.java)
+			colonSplitter.any { name -> name == componentName.flattenToString() }
+		} ?: false
+
+		if (isEnabledInSettings && !QueueSingleton.isListenerConnected) {
+			Log.w("AllNotificationService", "NotificationListenerService dead but enabled. Restarting component.")
+			val pm = packageManager
+			val componentName = android.content.ComponentName(this, NotificationListener::class.java)
+
+			try {
+				pm.setComponentEnabledSetting(
+					componentName,
+					android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+					android.content.pm.PackageManager.DONT_KILL_APP
+				)
+				
+				pm.setComponentEnabledSetting(
+					componentName,
+					android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+					android.content.pm.PackageManager.DONT_KILL_APP
+				)
+			} catch (e: Exception) {
+				e.printStackTrace()
+			}
+		}
 	}
 }
