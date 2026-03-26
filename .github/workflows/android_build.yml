@@ -31,24 +31,13 @@ jobs:
       - name: Set release hash as env variable
         run: echo "SHA_SHORT=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Release and Upload APK
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: AutoRelease_${{env.SHA_SHORT}}
-          release_name: Automatic release ${{ env.NOW_LONG }}
+          tag_name: AutoRelease_${{ env.SHA_SHORT }}
+          name: Automatic release ${{ env.NOW_LONG }}
           draft: false
           prerelease: false
-
-      - name: Upload APK to Release
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
+          files: ./app/build/outputs/apk/release/app-release-unsigned.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-          asset_path: ./app/build/outputs/apk/release/app-release-unsigned.apk
-          asset_name: app-release-unsigned.apk
-          asset_content_type: application/zip
