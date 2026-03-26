@@ -43,4 +43,4 @@ jobs:
           prerelease: false
           files: ./app/build/outputs/apk/release/app-release-unsigned.apk
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}W
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
