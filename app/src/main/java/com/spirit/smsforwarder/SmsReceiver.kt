@@ -11,6 +11,16 @@ import com.spirit.smsforwarder.model.QueueSingleton
 class SmsReceiver : BroadcastReceiver() {
 	override fun onReceive(context: Context, intent: Intent) {
 		if (intent.action == Telephony.Sms.Intents.SMS_RECEIVED_ACTION) {
+			//If android kills the core service, waking up via this manifest receiver should restart it
+			try {
+				androidx.core.content.ContextCompat.startForegroundService(
+					context,
+					Intent(context, AllNotificationService::class.java)
+				)
+			} catch (e: Exception) {
+				e.printStackTrace()
+			}
+
 			val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
 			for (message in messages) {
 				//Log.d("SmsReceiver", "SMS received from ${message.displayOriginatingAddress}: ${message.displayMessageBody}")
@@ -21,8 +31,10 @@ class SmsReceiver : BroadcastReceiver() {
 					timestamp = message.timestampMillis
 				)
 
-				if (!QueueSingleton.containsMessage(msg))
+				if (!QueueSingleton.containsMessage(msg)) {
 					QueueSingleton.messageQueue.add(msg)
+					QueueSingleton.wakeUp()
+				}
 			}
 		}
 	}

@@ -15,6 +15,9 @@ object QueueSingleton {
 	@Volatile
 	var isListenerConnected = false
 
+	@Volatile
+	var wakeLock: android.os.PowerManager.WakeLock? = null
+
 	fun containsMessage(item: MessageItem): Boolean {
 		if(messageQueue.any{it.timestamp == item.timestamp})
 			return true
@@ -26,6 +29,24 @@ object QueueSingleton {
 		messageHistory.add(item)
 		while (messageHistory.size > 200) {
 			messageHistory.poll()
+		}
+	}
+
+	fun wakeUp() {
+		try {
+			wakeLock?.acquire(60000) // timeout safeguard
+		} catch (e: Exception) {
+			e.printStackTrace()
+		}
+	}
+
+	fun releaseWakeLock() {
+		try {
+			if (wakeLock?.isHeld == true) {
+				wakeLock?.release()
+			}
+		} catch (e: Exception) {
+			e.printStackTrace()
 		}
 	}
 }

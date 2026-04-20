@@ -8,7 +8,7 @@ class BootReceiver : BroadcastReceiver() {
 	override fun onReceive(context: Context, intent: Intent) {
 		if (Intent.ACTION_BOOT_COMPLETED == intent.action) {
 			val serviceIntent = Intent(context, AllNotificationService::class.java)
-			context.startService(serviceIntent)
+			androidx.core.content.ContextCompat.startForegroundService(context, serviceIntent)
 		}
 	}
 }

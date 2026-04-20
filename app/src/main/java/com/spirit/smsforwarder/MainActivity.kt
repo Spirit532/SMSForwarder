@@ -64,7 +64,7 @@ class MainActivity : AppCompatActivity() {
 		navView.setupWithNavController(navController)
 
 		// Start background service
-		startService(Intent(this, AllNotificationService::class.java))
+		androidx.core.content.ContextCompat.startForegroundService(this, Intent(this, AllNotificationService::class.java))
 	}
 
 	private fun requestPermissions() {

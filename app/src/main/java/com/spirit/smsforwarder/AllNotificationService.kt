@@ -29,6 +29,9 @@ class AllNotificationService : Service() {
 	@Volatile
 	private var isProcessingMessage = false
 
+	private var permanentWakeLock: android.os.PowerManager.WakeLock? = null
+	private var permanentWifiLock: android.net.wifi.WifiManager.WifiLock? = null
+
 	private var lastHealthCheckTime = System.currentTimeMillis()
 
 	private val processRunnable = object : Runnable {
@@ -94,6 +97,25 @@ class AllNotificationService : Service() {
 
 	override fun onCreate() {
 		super.onCreate()
+
+		val powerManager = getSystemService(android.content.Context.POWER_SERVICE) as android.os.PowerManager
+		try {
+			permanentWakeLock = powerManager.newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "SMSForwarder::PermanentWakeLock")
+			permanentWakeLock?.setReferenceCounted(false)
+			permanentWakeLock?.acquire()
+		} catch (e: Exception) {
+			e.printStackTrace()
+		}
+
+		try {
+			val wifiManager = applicationContext.getSystemService(android.content.Context.WIFI_SERVICE) as android.net.wifi.WifiManager
+			permanentWifiLock = wifiManager.createWifiLock(android.net.wifi.WifiManager.WIFI_MODE_FULL_HIGH_PERF, "SMSForwarder::PermanentWifiLock")
+			permanentWifiLock?.setReferenceCounted(false)
+			permanentWifiLock?.acquire()
+		} catch (e: Exception) {
+			e.printStackTrace()
+		}
+
 		registerReceiver(smsReceiver, IntentFilter(Telephony.Sms.Intents.SMS_RECEIVED_ACTION))
 		startService(Intent(this, NotificationListener::class.java))
 		handler.post(processRunnable)
@@ -104,6 +126,13 @@ class AllNotificationService : Service() {
 
 	override fun onDestroy() {
 		super.onDestroy()
+		try {
+			if (permanentWakeLock?.isHeld == true) permanentWakeLock?.release()
+			if (permanentWifiLock?.isHeld == true) permanentWifiLock?.release()
+		} catch (e: Exception) {
+			e.printStackTrace()
+		}
+
 		unregisterReceiver(smsReceiver)
 		stopService(Intent(this, NotificationListener::class.java))
 		handler.removeCallbacks(processRunnable)

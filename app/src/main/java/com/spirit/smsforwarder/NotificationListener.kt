@@ -50,9 +50,10 @@ class NotificationListener : NotificationListenerService() {
 				timestamp = sbn.postTime
 			)
 
-			// Check if the message with the same timestamp already exists
-			if (!QueueSingleton.containsMessage(msg))
+			if (!QueueSingleton.containsMessage(msg)) {
 				QueueSingleton.messageQueue.add(msg)
+				QueueSingleton.wakeUp()
+			}
 
 		}
 	}
